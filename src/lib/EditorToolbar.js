@@ -47,8 +47,11 @@ export default class EditorToolbar extends Component<Props> {
 
   static defaultProps = {
       inlineStyleButtons: INLINE_STYLE_BUTTONS,
+      additionalInlineStyleButtons: [],
       blockTypeButtons: BLOCK_TYPE_BUTTONS,
+      additionalBlockTypeButtons: [],
       blockTypeDropdownOptions: BLOCK_TYPE_DROPDOWN,
+      additionalBlockTypeDropdownOptions: [],
       showLinkButtons: true,
       showUndoRedo: true
   };
@@ -84,10 +87,14 @@ export default class EditorToolbar extends Component<Props> {
   }
 
   _renderBlockTypeDropdown(): React.Element {
-    let {blockTypeDropdownOptions} = this.props;
+    let {blockTypeDropdownOptions, additionalBlockTypeDropdownOptions} = this.props;
     let blockType = this._getCurrentBlockType();
-    let allowedOpts = BLOCK_TYPE_DROPDOWN.filter(b => blockTypeDropdownOptions.includes(b.id))
-        .push(...additionalBlockTypeDropdownOptions);
+    let allowedOpts = BLOCK_TYPE_DROPDOWN.filter(b => blockTypeDropdownOptions.includes(b.id));
+    allowedOpts.push(...additionalBlockTypeDropdownOptions);
+
+    if (allowedOpts.length === 0) {
+        return null;
+    }
 
     let choices = new Map(
       allowedOpts.map((type) => [type.style, type.label])
@@ -95,9 +102,7 @@ export default class EditorToolbar extends Component<Props> {
     if (!choices.has(blockType)) {
       blockType = Array.from(choices.keys())[0];
     }
-    if (choices.length === 0) {
-        return null;
-    }
+
     return (
       <ButtonGroup>
         <Dropdown
@@ -110,9 +115,9 @@ export default class EditorToolbar extends Component<Props> {
   }
 
   _renderBlockTypeButtons(): React.Element {
-    let {blockTypeButtons} = this.props;
-    let allowedOpts = BLOCK_TYPE_BUTTONS.filter(b => blockTypeButtons.includes(b.id))
-        .push(...additionalBlockTypeButtons);
+    let {blockTypeButtons, additionalBlockTypeButtons} = this.props;
+    let allowedOpts = BLOCK_TYPE_BUTTONS.filter(b => blockTypeButtons.includes(b.id));
+    allowedOpts.push(...additionalBlockTypeButtons);
     let blockType = this._getCurrentBlockType();
     let buttons = allowedOpts.map((type, index) => (
       <StyleButton
@@ -129,9 +134,9 @@ export default class EditorToolbar extends Component<Props> {
   }
 
   _renderInlineStyleButtons(): React.Element {
-    let {inlineStyleButtons, editorState} = this.props;
-    let allowedOpts = INLINE_STYLE_BUTTONS.filter(b => inlineStyleButtons.includes(b.id))
-        .push(...additionalInlineStyleButtons);
+    let {inlineStyleButtons, additionalInlineStyleButtons, editorState} = this.props;
+    let allowedOpts = INLINE_STYLE_BUTTONS.filter(b => inlineStyleButtons.includes(b.id));
+    allowedOpts.push(...additionalInlineStyleButtons);
     let currentStyle = editorState.getCurrentInlineStyle();
     let buttons = allowedOpts.map((type, index) => (
       <StyleButton
