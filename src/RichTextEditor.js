@@ -21,6 +21,7 @@ import './Draft.global.css';
 import styles from './RichTextEditor.css';
 
 import type {ContentBlock} from 'draft-js';
+import type {ToolbarButton} from './lib/EditorToolbarConfig';
 
 const MAX_LIST_DEPTH = 2;
 
@@ -40,6 +41,14 @@ type Props = {
   className: ?string;
   value: EditorValue;
   onChange: ChangeHandler;
+  inlineStyleButtons: Array<string>;
+  additionalInlineStyleButtons: Array<ToolbarOption>;
+  blockTypeButtons: Array<string>;
+  additionalBlockTypeButtons: Array<ToolbarOption>;
+  blockTypeDropdownOptions: Array<string>;
+  additionalBlockTypeDropdownOptions: Array<ToolbarOption>;
+  showLinkButtons: boolean;
+  showUndoRedo: boolean;
 };
 
 export default class RichTextEditor extends Component<Props> {
@@ -65,6 +74,7 @@ export default class RichTextEditor extends Component<Props> {
     return (
       <div className={className}>
         <EditorToolbar
+          {...this.props}
           keyEmitter={this._keyEmitter}
           editorState={editorState}
           onChange={this._onChange}
