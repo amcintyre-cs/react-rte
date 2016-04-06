@@ -23,6 +23,7 @@ import autobind from 'class-autobind';
 import styles from './EditorToolbar.css';
 
 import type {EventEmitter} from 'events';
+import type {ToolbarButton} from './EditorToolbarConfig';
 
 type ChangeHandler = (state: EditorState) => any;
 
@@ -31,10 +32,26 @@ type Props = {
   keyEmitter: EventEmitter;
   onChange: ChangeHandler;
   focusEditor: Function;
+  inlineStyleButtons: Array<string>;
+  additionalInlineStyleButtons: Array<ToolbarOption>;
+  blockTypeButtons: Array<string>;
+  additionalBlockTypeButtons: Array<ToolbarOption>;
+  blockTypeDropdownOptions: Array<string>;
+  additionalBlockTypeDropdownOptions: Array<ToolbarOption>;
+  showLinkButtons: boolean;
+  showUndoRedo: boolean;
 };
 
 export default class EditorToolbar extends Component<Props> {
   props: Props;
+
+  static defaultProps = {
+      inlineStyleButtons: INLINE_STYLE_BUTTONS,
+      blockTypeButtons: BLOCK_TYPE_BUTTONS,
+      blockTypeDropdownOptions: BLOCK_TYPE_DROPDOWN,
+      showLinkButtons: true,
+      showUndoRedo: true
+  };
 
   constructor() {
     super(...arguments);
@@ -67,12 +84,19 @@ export default class EditorToolbar extends Component<Props> {
   }
 
   _renderBlockTypeDropdown(): React.Element {
+    let {blockTypeDropdownOptions} = this.props;
     let blockType = this._getCurrentBlockType();
+    let allowedOpts = BLOCK_TYPE_DROPDOWN.filter(b => blockTypeDropdownOptions.includes(b.id))
+        .push(...additionalBlockTypeDropdownOptions);
+
     let choices = new Map(
-      BLOCK_TYPE_DROPDOWN.map((type) => [type.style, type.label])
+      allowedOpts.map((type) => [type.style, type.label])
     );
     if (!choices.has(blockType)) {
       blockType = Array.from(choices.keys())[0];
+    }
+    if (choices.length === 0) {
+        return null;
     }
     return (
       <ButtonGroup>
@@ -86,8 +110,11 @@ export default class EditorToolbar extends Component<Props> {
   }
 
   _renderBlockTypeButtons(): React.Element {
+    let {blockTypeButtons} = this.props;
+    let allowedOpts = BLOCK_TYPE_BUTTONS.filter(b => blockTypeButtons.includes(b.id))
+        .push(...additionalBlockTypeButtons);
     let blockType = this._getCurrentBlockType();
-    let buttons = BLOCK_TYPE_BUTTONS.map((type, index) => (
+    let buttons = allowedOpts.map((type, index) => (
       <StyleButton
         key={String(index)}
         isActive={type.style === blockType}
@@ -102,9 +129,11 @@ export default class EditorToolbar extends Component<Props> {
   }
 
   _renderInlineStyleButtons(): React.Element {
-    let {editorState} = this.props;
+    let {inlineStyleButtons, editorState} = this.props;
+    let allowedOpts = INLINE_STYLE_BUTTONS.filter(b => inlineStyleButtons.includes(b.id))
+        .push(...additionalInlineStyleButtons);
     let currentStyle = editorState.getCurrentInlineStyle();
-    let buttons = INLINE_STYLE_BUTTONS.map((type, index) => (
+    let buttons = allowedOpts.map((type, index) => (
       <StyleButton
         key={String(index)}
         isActive={currentStyle.has(type.style)}
@@ -119,7 +148,12 @@ export default class EditorToolbar extends Component<Props> {
   }
 
   _renderLinkButtons(): React.Element {
-    let {editorState} = this.props;
+    let {showLinkButtons, editorState} = this.props;
+
+    if (!showLinkButtons) {
+        return null;
+    }
+
     let selection = editorState.getSelection();
     let entity = this._getEntityAtCursor();
     let hasSelection = !selection.isCollapsed();
@@ -147,7 +181,12 @@ export default class EditorToolbar extends Component<Props> {
   }
 
   _renderUndoRedo(): React.Element {
-    let {editorState} = this.props;
+    let {showUndoRedo, editorState} = this.props;
+
+    if (!showUndoRedo) {
+        return null;
+    }
+
     let canUndo = editorState.getUndoStack().size !== 0;
     let canRedo = editorState.getRedoStack().size !== 0;
     return (
