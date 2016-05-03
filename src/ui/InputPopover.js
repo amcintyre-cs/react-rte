@@ -13,6 +13,7 @@ type Props = {
   className: ?string;
   onCancel: () => any;
   onSubmit: (value: string) => any;
+  placeholder: ?string;
 };
 
 export default class InputPopover extends Component<Props> {
@@ -43,7 +44,7 @@ export default class InputPopover extends Component<Props> {
           <input
             ref={this._setInputRef}
             type="text"
-            placeholder="https://example.com/"
+            placeholder={this.props.placeholder}
             className={styles.input}
           />
           <ButtonGroup className={styles.buttonGroup}>
@@ -59,6 +60,11 @@ export default class InputPopover extends Component<Props> {
             />
           </ButtonGroup>
         </div>
+
+        <div ref={this._setChildRefs}>
+            {this.props.children}
+        </div>
+
       </form>
     );
   }
@@ -67,10 +73,28 @@ export default class InputPopover extends Component<Props> {
     this._inputRef = inputElement;
   }
 
+  _setChildRefs(element: Object) {
+    if (element) {
+      this._additionalInputs = Array.prototype.slice.apply(element.querySelectorAll('input'));
+    }
+  }
+
+  _getAdditionalFormData() {
+    if (this._additionalInputs) {
+      return this._additionalInputs.reduce((prev, cur) => {
+          if (cur.checked) {
+              prev[cur.name] = cur.value;
+          }
+          return prev;
+      }, {});
+    }
+    return null;
+  }
+
   _onSubmit(event: Object) {
     event.preventDefault();
     event.stopPropagation();
-    this.props.onSubmit(this._inputRef.value);
+    this.props.onSubmit(this._inputRef.value, this._getAdditionalFormData());
   }
 
   _onDocumentClick(event: Object) {

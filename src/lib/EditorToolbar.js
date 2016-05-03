@@ -21,6 +21,7 @@ import autobind from 'class-autobind';
 
 // $FlowIssue - Flow doesn't understand CSS Modules
 import styles from './EditorToolbar.css';
+import iconStyles from '../ui/IconButton.css';
 
 import type {EventEmitter} from 'events';
 import type {ToolbarButton} from './EditorToolbarConfig';
@@ -173,7 +174,13 @@ export default class EditorToolbar extends Component<Props> {
           showPopover={this.state.showLinkInput}
           onTogglePopover={this._toggleShowLinkInput}
           onSubmit={this._setLink}
-        />
+          placeholder="https://www.example.org"
+        >
+            <div>
+                <input id="__rte-new-window" name="target" type="checkbox" value="_blank"/>
+                <label htmlFor="__rte-new-window" className={iconStyles['icon-new-window']}></label>
+            </div>
+        </PopoverIconButton>
         <IconButton
           label="Remove Link"
           iconName="remove-link"
@@ -244,10 +251,10 @@ export default class EditorToolbar extends Component<Props> {
     this.setState({showLinkInput: !isShowing});
   }
 
-  _setLink(url: string) {
+  _setLink(url: string, additionalData: ?Object) {
     let {editorState} = this.props;
     let selection = editorState.getSelection();
-    let entityKey = Entity.create(ENTITY_TYPE.LINK, 'MUTABLE', {url});
+    let entityKey = Entity.create(ENTITY_TYPE.LINK, 'MUTABLE', Object.assign({url}, additionalData));
     this.setState({showLinkInput: false});
     this.props.onChange(
       RichUtils.toggleLink(editorState, selection, entityKey)
