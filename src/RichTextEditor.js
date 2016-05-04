@@ -12,9 +12,12 @@ import EditorValue from './lib/EditorValue';
 import LinkDecorator from './lib/LinkDecorator';
 import cx from 'classnames';
 import autobind from 'class-autobind';
+import PopoverIconButton from './ui/PopoverIconButton';
+import ButtonGroup from './ui/ButtonGroup';
 import {EventEmitter} from 'events';
 import {BLOCK_TYPE} from 'draft-js-tools';
 import {stateFromHTML} from 'draft-js-import-html';
+import {toggleShowInput} from './ui/PopoverIconButton';
 
 // $FlowIssue - Flow doesn't understand CSS Modules
 import './Draft.global.css';
@@ -38,6 +41,11 @@ const styleMap = {
 
 type ChangeHandler = (value: EditorValue) => any;
 
+type ViewSourceOptions = {
+    enabled: boolean,
+    type: string
+};
+
 type Props = {
   className: ?string;
   value: EditorValue;
@@ -50,6 +58,7 @@ type Props = {
   additionalBlockTypeDropdownOptions: Array<ToolbarOption>;
   showLinkButtons: boolean;
   showUndoRedo: boolean;
+  viewSource: ?ViewSourceOptions;
 };
 
 export default class RichTextEditor extends Component<Props> {
@@ -59,6 +68,10 @@ export default class RichTextEditor extends Component<Props> {
     super(...arguments);
     this._keyEmitter = new EventEmitter();
     autobind(this);
+
+    this.state = { currentState: this.props.value, showSourceInput: false };
+    this._toggleShowSourceInput = toggleShowInput.bind(this, 'showSourceInput', this._focus);
+    this._handleViewSourceUpdate = this._handleViewSourceUpdate.bind(this);
   }
 
   render(): React.Element {
@@ -72,6 +85,24 @@ export default class RichTextEditor extends Component<Props> {
       [styles.editor]: true,
       [styles.hidePlaceholder]: this._shouldHidePlaceholder(),
     });
+
+    let viewSource = null;
+    if (props.viewSource && props.viewSource.enabled) {
+        viewSource =
+            <ButtonGroup>
+              <PopoverIconButton
+                label="HTML"
+                iconName="html"
+                isDisabled={false}
+                showPopover={this.state.showSourceInput}
+                onTogglePopover={this._toggleShowSourceInput}
+                onSubmit={this._handleViewSourceUpdate}
+                inputType="textarea"
+                defaultValue={this.state.currentState.toString(props.viewSource.type)}
+              />
+            </ButtonGroup>
+    }
+
     return (
       <div className={className}>
         <EditorToolbar
@@ -80,7 +111,10 @@ export default class RichTextEditor extends Component<Props> {
           editorState={editorState}
           onChange={this._onChange}
           focusEditor={this._focus}
-        />
+          viewSource={this.props.viewSource}
+        >
+            {viewSource}
+        </EditorToolbar>
         <div className={editorClassName}>
           <Editor
             blockStyleFn={getBlockStyle}
@@ -248,10 +282,17 @@ export default class RichTextEditor extends Component<Props> {
   _onChange(editorState: EditorState) {
     let newValue = this.props.value.setEditorState(editorState);
     this.props.onChange(newValue);
+    this.setState({ currentState: newValue });
   }
 
   _focus() {
     this.refs.editor.focus();
+  }
+
+  _handleViewSourceUpdate(newVal: string) {
+    const newValue = RichTextEditor.createValueFromString(newVal, this.props.viewSource.type);
+    this._onChange(newValue.getEditorState());
+    this.setState({showSourceInput: false});
   }
 }
 

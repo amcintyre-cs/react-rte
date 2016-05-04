@@ -1,14 +1,14 @@
 /* @flow */
 
 import React, {Component} from 'react';
+import ReactDOM from 'react-dom';
 import IconButton from './IconButton';
 import InputPopover from './InputPopover';
 
 type Props = {
   showPopover: boolean,
   onTogglePopover: Function,
-  onSubmit: Function,
-  placeholder: ?string;
+  onSubmit: Function;
 };
 
 export default class PopoverIconButton extends Component<Props> {
@@ -33,9 +33,11 @@ export default class PopoverIconButton extends Component<Props> {
     if (!this.props.showPopover) {
       return null;
     }
+
+    let {props} = this;
     return (
       <InputPopover
-        placeholder={this.props.placeholder}
+        {...props}
         onSubmit={this._onSubmit}
         onCancel={this._hidePopover}
       >
@@ -53,4 +55,25 @@ export default class PopoverIconButton extends Component<Props> {
       this.props.onTogglePopover(...arguments);
     }
   }
+}
+
+export function toggleShowInput(key: string, focusEditor: Function, event: ?Object) {
+  let isShowing = this.state[key];
+  // If this is a hide request, decide if we should focus the editor.
+  if (isShowing) {
+    let shouldFocusEditor = true;
+    if (event && event.type === 'click') {
+      // TODO: Use a better way to get the editor root node.
+      let editorRoot = ReactDOM.findDOMNode(this).parentNode;
+      let {activeElement} = document;
+      let wasClickAway = (activeElement == null || activeElement === document.body);
+      if (!wasClickAway && !editorRoot.contains(activeElement)) {
+        shouldFocusEditor = false;
+      }
+    }
+    if (shouldFocusEditor) {
+      focusEditor();
+    }
+  }
+  return this.setState({[key]: !isShowing});
 }

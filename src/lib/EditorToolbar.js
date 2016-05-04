@@ -2,7 +2,6 @@
 import {hasCommandModifier} from 'draft-js/lib/KeyBindingUtil';
 
 import React, {Component} from 'react';
-import ReactDOM from 'react-dom';
 import {EditorState, Entity, RichUtils} from 'draft-js';
 import {ENTITY_TYPE} from 'draft-js-tools';
 import {
@@ -18,6 +17,7 @@ import IconButton from '../ui/IconButton';
 import getEntityAtCursor from './getEntityAtCursor';
 import clearEntityForRange from './clearEntityForRange';
 import autobind from 'class-autobind';
+import {toggleShowInput} from '../ui/PopoverIconButton';
 
 // $FlowIssue - Flow doesn't understand CSS Modules
 import styles from './EditorToolbar.css';
@@ -61,8 +61,9 @@ export default class EditorToolbar extends Component<Props> {
     super(...arguments);
     autobind(this);
     this.state = {
-      showLinkInput: false,
+      showLinkInput: false
     };
+    this._toggleShowLinkInput = toggleShowInput.bind(this, 'showLinkInput', this.props.focusEditor);
   }
 
   componentWillMount() {
@@ -83,6 +84,7 @@ export default class EditorToolbar extends Component<Props> {
         {this._renderLinkButtons()}
         {this._renderBlockTypeDropdown()}
         {this._renderUndoRedo()}
+        {this.props.children}
       </div>
     );
   }
@@ -228,27 +230,6 @@ export default class EditorToolbar extends Component<Props> {
       this.setState({showLinkInput: true});
       eventFlags.wasHandled = true;
     }
-  }
-
-  _toggleShowLinkInput(event: ?Object) {
-    let isShowing = this.state.showLinkInput;
-    // If this is a hide request, decide if we should focus the editor.
-    if (isShowing) {
-      let shouldFocusEditor = true;
-      if (event && event.type === 'click') {
-        // TODO: Use a better way to get the editor root node.
-        let editorRoot = ReactDOM.findDOMNode(this).parentNode;
-        let {activeElement} = document;
-        let wasClickAway = (activeElement == null || activeElement === document.body);
-        if (!wasClickAway && !editorRoot.contains(activeElement)) {
-          shouldFocusEditor = false;
-        }
-      }
-      if (shouldFocusEditor) {
-        this.props.focusEditor();
-      }
-    }
-    this.setState({showLinkInput: !isShowing});
   }
 
   _setLink(url: string, additionalData: ?Object) {

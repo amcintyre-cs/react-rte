@@ -14,6 +14,8 @@ type Props = {
   onCancel: () => any;
   onSubmit: (value: string) => any;
   placeholder: ?string;
+  inputType: ?string;
+  defaultValue: ?string;
 };
 
 export default class InputPopover extends Component<Props> {
@@ -27,7 +29,12 @@ export default class InputPopover extends Component<Props> {
   componentDidMount() {
     document.addEventListener('click', this._onDocumentClick);
     document.addEventListener('keydown', this._onDocumentKeydown);
+    this._fixPositioning();
     this._inputRef.focus();
+  }
+
+  componentDidUpdate() {
+    this._fixPositioning();
   }
 
   componentWillUnmount() {
@@ -38,15 +45,29 @@ export default class InputPopover extends Component<Props> {
   render(): React.Element {
     let {props} = this;
     let className = cx(props.className, styles.root);
+    let input = null;
+
+    if (props.inputType === 'textarea') {
+        input = <textarea
+          ref={this._setInputRef}
+          placeholder={this.props.placeholder}
+          className={`${styles.input} ${styles.textarea}`}
+          defaultValue={props.defaultValue}
+        />;
+    }
+    else {
+        input = <input
+          ref={this._setInputRef}
+          type="text"
+          placeholder={this.props.placeholder}
+          className={styles.input}
+          defaultValue={props.defaultValue}
+        />;
+    }
     return (
-      <form className={className} onSubmit={this._onSubmit}>
+      <form className={className} onSubmit={this._onSubmit} ref="form">
         <div className={styles.inner}>
-          <input
-            ref={this._setInputRef}
-            type="text"
-            placeholder={this.props.placeholder}
-            className={styles.input}
-          />
+          {input}
           <ButtonGroup className={styles.buttonGroup}>
             <IconButton
               label="Cancel"
@@ -108,6 +129,16 @@ export default class InputPopover extends Component<Props> {
   _onDocumentKeydown(event: Object) {
     if (event.keyCode === 27) {
       this.props.onCancel();
+    }
+  }
+
+  _fixPositioning() {
+    const className = cx(this.props.className, styles.right);
+    if (this.refs.form.getBoundingClientRect().right > window.innerWidth) {
+      this.refs.form.classList.add(className);
+    }
+    else {
+      this.refs.form.classList.remove(className);
     }
   }
 }

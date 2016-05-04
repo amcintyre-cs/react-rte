@@ -35,6 +35,21 @@
   border-bottom-color: #fdfdfd;
 }
 
+.right {
+  left: auto;
+  right: 0;
+}
+
+.right:before {
+  left: auto;
+  right: 10px;
+}
+
+.right:after {
+  left: auto;
+  right: 10px;
+}
+
 .inner {
   display: flex;
 }
@@ -51,6 +66,10 @@
   font-family: inherit;
   font-size: inherit;
   line-height: 24px;
+}
+
+.textarea {
+  height: 250px;
 }
 
 .inner .buttonGroup {
