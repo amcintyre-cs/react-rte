@@ -1,6 +1,6 @@
 /* @flow */
 import React, {Component} from 'react';
-import {CompositeDecorator, Editor, EditorState, Modifier, RichUtils} from 'draft-js';
+import {CompositeDecorator, Editor, EditorState, Modifier, RichUtils, BlockMapBuilder} from 'draft-js';
 import getDefaultKeyBinding from 'draft-js/lib/getDefaultKeyBinding';
 import changeBlockDepth from './lib/changeBlockDepth';
 import changeBlockType from './lib/changeBlockType';
@@ -228,8 +228,17 @@ export default class RichTextEditor extends Component<Props> {
         html = html.substring(0, htmlIndex + closeHtmlTag.length);
       }
 
-      let newEditorState = EditorState.createWithContent(stateFromHTML(html));
-      this._onChange(newEditorState);
+      let newValue = RichTextEditor.createValueFromString(html, 'html');
+      let editorState = this.props.value.getEditorState();
+
+      const newContent = Modifier.replaceWithFragment(
+          editorState.getCurrentContent(),
+          editorState.getSelection(),
+          newValue.getEditorState().getCurrentContent().blockMap
+      );
+      const newState = EditorState.push(editorState, newContent, 'insert-fragment');
+
+      this._onChange(newState);
       return true;
     }
     return false;
